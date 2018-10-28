@@ -1,7 +1,7 @@
 "use strict";
 const cinema = {
   places: [],
-	order: null,
+	order: [],
 	unavailable: generateUnavailableIdx(),
   options: {
 		defaultPrice: 100,
@@ -15,32 +15,26 @@ document.addEventListener("DOMContentLoaded", setPlaces);
 
 function setPlaces() {
   /** Generate 100 places with 10 random booked places **/
-	let posCounter = 1,
-		rowCounter = 0;
-	for (let i = 0; i < 100; i++) {
-		posCounter++;
-		if (i % 10 === 0) {
-			++rowCounter;
-			posCounter = 1;
+	for (let row = 1; row <= 10; row++) {
+		for (let column = 1; column <= 10; column++) {
+			let placesCount = cinema.places.length;
+			cinema.places.push({
+				index: cinema.places.length,
+				position: column,
+				row: row,
+				price: cinema.options.defaultPrice,
+				available: !cinema.unavailable.some(item => {
+					return item === placesCount;
+				})
+			});
 		}
-		cinema.places.push({
-			index: cinema.places.length,
-			position: posCounter,
-			row: rowCounter,
-			price: cinema.options.defaultPrice,
-			available: !cinema.unavailable.some(item => {
-				return item === i + 1;
-			})
-		});
 	}
-	if (cinema.places && cinema.places.length) {
-		renderPlaces();
-	}
+	renderPlaces();
 }
 
 function renderPlaces() {
 	if (!cinema.places.length) {
-		return null;
+		return;
 	}
 	cinema.options.placesContainer.innerHTML = "";
 	cinema.options.placesContainer.removeAttribute("data-empty");
@@ -62,20 +56,17 @@ function togglePlaceInOrder(e) {
 	const place = cinema.places[placeIndex];
 	let selected = true;
 	if (!place.available) {
-		return null;
+		return;
 	}
-	if (!cinema.order) {
-		cinema.order = {
-			places: [place],
-			total: place.price
-		};
+	if (!cinema.order.length) {
+		cinema.order = [place]
 	} else {
-		let p = cinema.order.places;
+		let p = cinema.order;
 		if (p.includes(place)) {
-			cinema.order.places.splice(p.indexOf(place), 1);
+			cinema.order.splice(p.indexOf(place), 1);
 			selected = false;
 		} else {
-			cinema.order.places.push(place);
+			cinema.order.push(place);
 		}
 	}
 
@@ -95,18 +86,18 @@ function updatePlace(placeIndex, params) {
 /** Order functions: **/
 
 function updateOrder() {
-  if (!cinema.order.places.length) {
+  if (!cinema.order.length) {
     clearOrder();
-    return null;
+    return;
   }
   cinema.options.orderBlock.setAttribute("data-empty", "false");
 
 	cinema.options.orderBlock.innerHTML =
     "<div class='order-text'>You chose places:</div>" +
     "<div class='order-places'>" +
-    renderOrderPlaces(cinema.order.places) +
+    renderOrderPlaces(cinema.order) +
     "<div class='order-total'>Total: " +
-		calcOrderTotal() +
+		calcOrderTotal(cinema.order) +
     "</div>" +
     "</div>" +
     "<button class='order-buy'>Get Tickets</button><button class='order-cancel'>Cancel</button>";
@@ -127,8 +118,8 @@ function updateOrder() {
     return placesHtml;
   }
 
-  function calcOrderTotal() {
-    return cinema.order.places
+  function calcOrderTotal(places) {
+    return places
       .map(i => {
         return i.price;
       })
@@ -139,19 +130,19 @@ function updateOrder() {
 }
 
 function bookPlaces() {
-  cinema.order.places.forEach(p => {
-    updatePlace(p.index, { selected: p.available = false, available: p.selected = false });
+  cinema.order.forEach(p => {
+    updatePlace(p.index, { selected: p.selected = false, available: p.available = false });
   });
-  cinema.order = null;
+  cinema.order = [];
 	cinema.options.orderBlock.innerHTML =
     "<div class='success'>Thank you for the order! </div>";
 }
 
 function clearOrder() {
-	cinema.order.places.forEach(p => {
+	cinema.order.forEach(p => {
 		updatePlace(p.index, { selected: false });
 	});
-  cinema.order = null;
+  cinema.order = [];
 	cinema.options.orderBlock.setAttribute("data-empty", "true");
 	cinema.options.orderBlock.innerHTML = "";
 }
