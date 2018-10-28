@@ -19,7 +19,7 @@ function setPlaces() {
 		for (let column = 1; column <= 10; column++) {
 			let placesCount = cinema.places.length;
 			cinema.places.push({
-				index: cinema.places.length,
+				index: placesCount,
 				position: column,
 				row: row,
 				price: cinema.options.defaultPrice,
